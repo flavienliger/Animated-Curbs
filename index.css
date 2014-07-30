@@ -1,0 +1,17 @@
+html, body { background:#eee; margin:0 }
+h1, h2 { margin:0; font-size:100%; font-family:'Arial Black',sans-serif; }
+h1 { background:#333; color:#eee; line-height:2em; padding:0 1em; }
+h2 { border:1px solid; background:#ddd; line-height:1.5em; }
+#content{ padding:1em; text-align:center; }
+section { display:inline-block; width:450px; height:400px; vertical-align:top; margin:1em; position:relative; z-index:1; }
+section .content { background:#fff; border:1px solid; width:450px; height:375px; border-top:0; box-sizing:border-box; -moz-box-sizing:border-box; }
+#code { text-align:left; font-size:100%; width:100%; padding:1em; font-family:Courier,'Courier New'; }
+svg {  }
+svg path { fill:none; stroke:#000; stroke-width:3px; vector-effect:non-scaling-stroke; stroke-linecap:round; }
+svg circle { opacity:0.3; fill:#ff0; stroke:#630; vector-effect:non-scaling-stroke }
+svg .drag { cursor:move }
+svg line { stroke:#900; opacity:0.5; stroke-width:1px; vector-effect:non-scaling-stroke; stroke-dasharray:4; }
+svg circle#c0 { fill:#0f0; }
+svg circle#c1 { fill:#f00; }
+#img { width:60px; position: absolute; }
+#footer { position:absolute; left:1.33em; bottom:1px; font-size:75%; z-index:0; }
