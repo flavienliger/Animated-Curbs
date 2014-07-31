@@ -8,14 +8,65 @@
 		<section>
 			<h2>Result</h2>
 			<div id="result" class="content">
-				<img id="img" src="./Animating on a Curved Path, using SVG & JavaScript_files/gkhead.jpg" style="position: absolute; left: 0px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 0px; -webkit-transform: rotate(90deg)">
+				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 100px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 200px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 300px;">
 			</div> 
 		</section>
 	</div>
-
+	
+	<p class="button"><button onclick="pause();">Pause</button> / <button onclick="play();">Play</button> / <button onclick="stop();">Stop</button></p>
+	
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="transform.js"></script>
 	<script src="rAF.js"></script>
 	<script src="curve.js"></script>
-	<script src="script.js"></script>
 
+<script>
+	var pause = function(){
+		$('img:first').curvePause();	
+	};
+
+	var play = function(){
+		$('img:first').curvePlay();	
+	};
+
+	var stop = function(){
+		$('img').curveStop();	
+	};
+	
+	$('img:first').animateCurve({ start: [200,50], 
+					   end: [200,250], 
+					   tanStart: [-50,100], 
+					   tanEnd: [-50,200], angle: false}
+	, 1000, function(){ return
+		$(this).animateCurve({ start: [200,250], 
+						   end: [200,450], 
+						   tanStart: [450,300], 
+						   tanEnd: [450,400]}, 1000,
+		function(){
+			$(this).animateCurve({ start: [200,450], 
+								   end: [200,650], 
+								   tanStart: [-50,500], 
+								   tanEnd: [-50,600]}, 1000,
+			function(){
+
+			});
+		});
+	});
+
+	//var i=0;
+	//function boucle(){ 
+	//	var obj = i==0? { start: [50,300], end: [350,300], tanStart: [50,100], tanEnd: [350,100]}:
+	//					{ start: [350,300], end: [50,300], tanStart: [350,100], tanEnd: [50,100]}
+	//
+	//	$('img').animateCurve(obj, 2000, function(){
+	//		i = (i==0)? 1:0;
+	//		boucle();
+	//	});
+	//}
+	//boucle();
+</script>
 </body>
 </html>
