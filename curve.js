@@ -4,6 +4,16 @@
 	var delegateLoop = false;
 	
 	var CurveAnimator = function(from,to,c1,c2){
+		
+		if(arguments.length == 1){
+			var data = arguments[0];
+			
+			from = data.start;
+			to = data.end;
+			c1 = data.tanStart;
+			c2 = data.tanEnd;
+		}
+		
 		this.path = document.createElementNS('http://www.w3.org/2000/svg','path');
 		if (!c1) c1 = from;
 		if (!c2) c2 = to;
@@ -47,18 +57,69 @@
 		return this;
 	};
 	
+	var hasEgal = function(obj){
+		
+		var obj = String(obj);
+		
+		if(obj.indexOf('+=') != -1){
+			return 1;
+		}
+		else if(obj.indexOf('-=') != -1){
+			return -1;	
+		}
+		return 0;
+	};
+	
+	var getCurve = function(obj, curve){
+		
+		var pos = { x: parseInt(obj.css('left')), y: parseInt(obj.css('top')) };
+		
+		var coord = ['x', 'y'];
+		
+		for(var key in curve){
+			
+			for(var i = 0; i<2; i++){
+				
+				var egal = hasEgal(curve[key][i]);
+				
+				if(egal){
+					curve[key][i] = curve[key][i].substr(2);
+					
+					if(key == 'start'){
+						curve.start[i] = pos[coord[i]] + parseInt(curve.start[i]) * egal;
+					}
+					else if(key == 'end'){
+						curve.end[i] = pos[coord[i]] + parseInt(curve.end[i]) * egal;
+					}
+					else if(key == 'tanStart'){ 
+						curve.tanStart[i] = parseInt(curve.start[i]) + parseInt(curve.tanStart[i]) * egal;
+					}
+					else if(key == 'tanEnd'){
+						curve.tanEnd[i] = parseInt(curve.end[i]) + parseInt(curve.tanEnd[i]) * egal;
+					}
+				}
+			}
+		}
+		console.log(curve.start, curve.end)
+		return curve;
+	};
+	
 	var animateCurve = function(obj, opt){
 		
-		this.path = new CurveAnimator(opt.start, opt.end, opt.tanStart, opt.tanEnd);
+		var curve = opt.curve;
 		
 		this.o = obj;
 		this.anim = true;
 		this.time = opt.time/1000;
 		this.callback = opt.callback;
-		this.useAngle = opt.angle;
+		this.useAngle = curve.angle;
 		this.pauseTime = 0;
 		this.startTime = Date.now();
-		this.transform = new Transform(obj);
+		this.baseTransform = new Transform(obj);
+		// to false /!\
+		this.hasTransform = this.baseTransform.hasTransform();
+		
+		this.path = new CurveAnimator(getCurve(obj, curve));
 	};
 	
 	animateCurve.prototype.pause = function(){
@@ -98,22 +159,38 @@
 			
 			var point = curve.pointAt(percent);
 			var angle = Math.atan2(p2.y-p1.y,p2.x-p1.x)*180/Math.PI;
-						
-			var css = 'translateX('+point.x+'px) translateY('+point.y+'px)';
 			
-			if(obj.useAngle){
-				css += ' rotate('+angle+'deg)';
+			var css = {
+				translateX: point.x,
+				translateY: point.y,
+				rotate: obj.useAngle? angle: 0
+			};
+			
+			var trans = new Transform(css);
+			
+			// add to previous transform
+			if(obj.hasTransform){
+				trans.add(obj.baseTransform.get(true));
 			}
 			
 			obj.o.css({
-				WebkitTransform: css
+				WebkitTransform: trans.getCssFormat()
 			});
 			
 			obj.o.offset();
 			
+			// end
 			if(!obj.anim){
 				animated.splice(i, 1);
 				obj.o.removeData('animate-curb');
+				
+				// comment this /!\
+				obj.o.css({
+					WebkitTransform: obj.hasTransform? obj.baseTransform.getCssFormat(): '',
+					top: parseInt(obj.o.css('top')) + css.translateY,
+					left: parseInt(obj.o.css('left')) + css.translateX
+				});
+				obj.o.offset();
 				obj.callback.apply(obj.o);
 			}
 		});
@@ -180,16 +257,18 @@
 	jQuery.fn.animateCurve = function(curve, aTime, aCallback){
 		
 		var opt = {
-			start: [0,0],
-			end: [100,0],
-			tanStart: [0,0],
-			tanEnd: [100,0],
-			angle: true,
+			curve: {
+				start: [0,0],
+				end: [100,0],
+				tanStart: [0,0],
+				tanEnd: [100,0],
+				angle: true
+			},
 			time: 1000,
 			callback: function(){}
 		};
 		
-		opt = $.extend(opt, curve);
+		opt.curve = $.extend(opt.curve, curve);
 		opt.time = aTime||opt.time;
 		opt.callback = aCallback||opt.callback;
 		

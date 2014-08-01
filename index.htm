@@ -8,10 +8,10 @@
 		<section>
 			<h2>Result</h2>
 			<div id="result" class="content">
-				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 0px; -webkit-transform: rotate(90deg)">
-				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 100px;">
-				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 200px;">
-				<img id="img" src="icon.png" style="position: absolute; left: 0px;top: 300px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 0px; -webkit-transform: rotate(90deg)">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 100px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 200px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 300px;">
 			</div> 
 		</section>
 	</div>
@@ -36,20 +36,25 @@
 		$('img').curveStop();	
 	};
 	
-	$('img:first').animateCurve({ start: [200,50], 
-					   end: [200,250], 
-					   tanStart: [-50,100], 
-					   tanEnd: [-50,200], angle: false}
-	, 1000, function(){ return
-		$(this).animateCurve({ start: [200,250], 
-						   end: [200,450], 
-						   tanStart: [450,300], 
-						   tanEnd: [450,400]}, 1000,
+//	$('img:first').animateCurve({ start: [200,'+=50'], 
+//					   end: [200,'+=250'], 
+//					   tanStart: ['-=250','+=50'], 
+//					   tanEnd: ['-=250','-=50'], angle: false});
+	
+	$('img').animateCurve({ start: [0,0], 
+					   end: [0,200], 
+					   tanStart: [-100,100], 
+					   tanEnd: [-100,150]}
+	, 1000, function(){
+		$(this).animateCurve({ start: [0,0], 
+						   end: [0,200], 
+						   tanStart: [100,100], 
+						   tanEnd: [100,150]}, 1000,
 		function(){
-			$(this).animateCurve({ start: [200,450], 
-								   end: [200,650], 
-								   tanStart: [-50,500], 
-								   tanEnd: [-50,600]}, 1000,
+			$(this).animateCurve({ start: [0,0], 
+								    end: [0,200], 
+					   tanStart: [-100,100], 
+					   tanEnd: [-100,150]}, 1000,
 			function(){
 
 			});
