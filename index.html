@@ -41,26 +41,37 @@
 //					   tanStart: ['-=250','+=50'], 
 //					   tanEnd: ['-=250','-=50'], angle: false});
 	
-	$('img').animateCurve({ start: [0,0], 
-					   end: [0,200], 
-					   tanStart: [-100,100], 
-					   tanEnd: [-100,150]}
-	, 1000, function(){
-		$(this).animateCurve({ start: [0,0], 
-						   end: [0,200], 
-						   tanStart: [100,100], 
-						   tanEnd: [100,150]}, 1000,
-		function(){
-			$(this).animateCurve({ start: [0,0], 
-								    end: [0,200], 
-					   tanStart: [-100,100], 
-					   tanEnd: [-100,150]}, 1000,
-			function(){
+//	$('img').animateCurve({ start: [0,0], 
+//					   end: [0,200], 
+//					   tanStart: [-100,100], 
+//					   tanEnd: [-100,150]}
+//	, 1000, function(){
+//		$(this).animateCurve({ start: [0,0], 
+//						   end: [0,200], 
+//						   tanStart: [100,100], 
+//						   tanEnd: [100,150]}, 1000,
+//		function(){
+//			$(this).animateCurve({ start: [0,0], 
+//								    end: [0,200], 
+//					   tanStart: [-100,100], 
+//					   tanEnd: [-100,150]}, 1000,
+//			function(){
+//
+//			});
+//		});
+//	});
 
-			});
-		});
-	});
-
+	$('img:first').animateCurve([
+		[0,0], ['-=100', '+=100'], ['-=100','+=150'], [0, '+=200'], 
+				['+=100', '+=100'], ['+=100','+=150'], [0, '+=200'],
+				['-=100', '+=100'], ['-=100','+=150'], [0, '+=200']
+	], {useAngle: true, cssTrans: false}, 3000, function(){
+		//$(this).animate({left: 500})
+	})
+//	.bind('click', function(){
+//		$(this).curveStop().animate({top: 0});
+//	});
+	
 	//var i=0;
 	//function boucle(){ 
 	//	var obj = i==0? { start: [50,300], end: [350,300], tanStart: [50,100], tanEnd: [350,100]}:

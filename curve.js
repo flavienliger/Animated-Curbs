@@ -1,62 +1,47 @@
 (function(jQuery) {
 	
-	var animated = [];
-	var delegateLoop = false;
+	var animated = [],
+		cssPrefixes = ['-webkit-', '-moz-', '-o-', ''],
+		delegateLoop = false;
 	
-	var CurveAnimator = function(from,to,c1,c2){
+	/**
+	 * Make svg curbs
+	 * @params {Array} curve - array of point [start][tang1][tang2][end][tang1][tang2][end]...
+	 */	
+	var CurveAnimator = function(curve){
+				
+		this.path = document.createElementNS('http://www.w3.org/2000/svg','path');
 		
-		if(arguments.length == 1){
-			var data = arguments[0];
+		var path = 'M'+curve[0].join(',')+' ';
+		
+		// generate curbs
+		for(var i=0; i<curve.length-1; i++){
+			if(i==0 || i%3 == 0){
+				path += ' C';	
+			}
 			
-			from = data.start;
-			to = data.end;
-			c1 = data.tanStart;
-			c2 = data.tanEnd;
+			path += curve[i+1].join(',')+' ';
 		}
 		
-		this.path = document.createElementNS('http://www.w3.org/2000/svg','path');
-		if (!c1) c1 = from;
-		if (!c2) c2 = to;
-		this.path.setAttribute('d','M'+from.join(',')+'C'+c1.join(',')+' '+c2.join(',')+' '+to.join(','));
-		this.updatePath();
+		this.path.setAttribute('d',path);
+		this.len = this.path.getTotalLength();
 	};
-
+	
+	/**
+	 * Return position in percent
+	 * @params {Number} percent
+	 * @return {Number}
+	 */	
 	CurveAnimator.prototype.pointAt = function(percent){
 		return this.path.getPointAtLength(this.len*percent);
 	};
-
-	CurveAnimator.prototype.updatePath = function(){
-		this.len = this.path.getTotalLength();
-	};
-
-	CurveAnimator.prototype.setStart = function(x,y){
-		var M = this.path.pathSegList.getItem(0);
-		M.x = x; M.y = y;
-		this.updatePath();
-		return this;
-	};
-
-	CurveAnimator.prototype.setEnd = function(x,y){
-		var C = this.path.pathSegList.getItem(1);
-		C.x = x; C.y = y;
-		this.updatePath();
-		return this;
-	};
-
-	CurveAnimator.prototype.setStartDirection = function(x,y){
-		var C = this.path.pathSegList.getItem(1);
-		C.x1 = x; C.y1 = y;
-		this.updatePath();
-		return this;
-	};
-
-	CurveAnimator.prototype.setEndDirection = function(x,y){
-		var C = this.path.pathSegList.getItem(1);
-		C.x2 = x; C.y2 = y;
-		this.updatePath();
-		return this;
-	};
 	
+	
+	/**
+	 * Return if string contain += or -=
+	 * @params {String} obj - element to check
+	 * @return {Number} - 0 none, 1 +=, 2 -=
+	 */	
 	var hasEgal = function(obj){
 		
 		var obj = String(obj);
@@ -69,75 +54,144 @@
 		}
 		return 0;
 	};
+
 	
-	var getCurve = function(obj, curve){
+	/**
+	 * Make animate
+	 * @params {jQuery} obj
+	 * @params {Number} id - position in animated
+	 * @params {Object} opt - option
+	 */	
+	var animateCurve = function(obj, id, opt){
 		
-		var pos = { x: parseInt(obj.css('left')), y: parseInt(obj.css('top')) };
+		$.extend(this, opt);
 		
-		var coord = ['x', 'y'];
-		
-		for(var key in curve){
-			
-			for(var i = 0; i<2; i++){
-				
-				var egal = hasEgal(curve[key][i]);
-				
-				if(egal){
-					curve[key][i] = curve[key][i].substr(2);
-					
-					if(key == 'start'){
-						curve.start[i] = pos[coord[i]] + parseInt(curve.start[i]) * egal;
-					}
-					else if(key == 'end'){
-						curve.end[i] = pos[coord[i]] + parseInt(curve.end[i]) * egal;
-					}
-					else if(key == 'tanStart'){ 
-						curve.tanStart[i] = parseInt(curve.start[i]) + parseInt(curve.tanStart[i]) * egal;
-					}
-					else if(key == 'tanEnd'){
-						curve.tanEnd[i] = parseInt(curve.end[i]) + parseInt(curve.tanEnd[i]) * egal;
-					}
-				}
-			}
-		}
-		console.log(curve.start, curve.end)
-		return curve;
-	};
-	
-	var animateCurve = function(obj, opt){
-		
-		var curve = opt.curve;
-		
+		this.id = id;
+		this.css = { left: 0, top: 0, angle: 0 };
 		this.o = obj;
 		this.anim = true;
-		this.time = opt.time/1000;
-		this.callback = opt.callback;
-		this.useAngle = curve.angle;
 		this.pauseTime = 0;
 		this.startTime = Date.now();
 		this.baseTransform = new Transform(obj);
-		// to false /!\
 		this.hasTransform = this.baseTransform.hasTransform();
 		
-		this.path = new CurveAnimator(getCurve(obj, curve));
+		this.path = new CurveAnimator(this.getCurve(opt.curve));
+	};
+
+	/**
+	 * Parse curve point and update path
+	 * @params {Array} curve
+	 * @return {Array}
+	 */	
+	animateCurve.prototype.getCurve = function(curve){
+		
+		var pos = [
+			parseInt(this.o.css('left')), 
+			parseInt(this.o.css('top'))
+		];
+		
+		if(this.hasTransform){
+			pos[0] += this.baseTransform.get('translateX');
+			pos[1] += this.baseTransform.get('translateY');
+		}
+		
+		var point = 0;
+		
+		for(var p=0; p<curve.length; p++){
+			
+			for(var i = 0; i<2; i++){
+				
+				var egal = hasEgal(curve[p][i]);
+				
+				if(egal){
+					curve[p][i] = parseInt(curve[p][i].substr(2));
+					
+					if(point == 0){
+						curve[p][i] = pos[i] + curve[p][i] * egal;
+					}
+					else if(point == 3){
+						curve[p][i] = curve[p-3][i] + curve[p][i] * egal;
+					}
+					else if(point == 1){ 
+						curve[p][i] = curve[p-1][i] + curve[p][i] * egal;
+					}
+					else if(point == 2){
+						curve[p][i] = curve[p-2][i] + curve[p][i] * egal;
+					}
+				}
+			}
+			
+			point++;
+			if(point>=4)
+				point = 1;
+		}
+		
+		return curve;
 	};
 	
+	/**
+	 * Pause
+	 */	
 	animateCurve.prototype.pause = function(){
 		
 		this.pauseTime = Date.now();
 		this.anim = false;	
 	};
 
+	/**
+	 * Play
+	 */	
 	animateCurve.prototype.play = function(){
 		
 		this.startTime += Date.now()-this.pauseTime;
 		this.anim = true;	
 	};
 
+	/**
+	 * Stop
+	 */	
 	animateCurve.prototype.stop = function(){
 		this.anim = false;	
+		animated.splice(this.id, 1);
+		this.o.removeData('animate-curb');
+		
+		if(this.cssTrans)
+			this.setTransform();
 	};
 	
+	/**
+	 * Remove transform and Set top/left
+	 */	
+	animateCurve.prototype.setTransform = function(){
+		var trans;
+		// has transform
+		if(this.hasTransform){
+			// and angle
+			if(this.css.angle){
+				this.baseTransform.set('rotateZ', this.css.angle);	
+			}
+			trans = this.baseTransform.getCssFormat();
+		}
+		// has angle
+		else if(this.css.angle){
+			trans = 'rotate('+this.css.angle+'deg)';	
+		}
+
+		for(var i=0, css={}; i<cssPrefixes.length; i++)
+			css[cssPrefixes[i]+'transform'] = trans;
+		
+		css['top'] = parseInt(this.o.css('top')) + this.css.top;
+		css['left'] = parseInt(this.o.css('left')) + this.css.left;
+		
+		this.o.css(css);
+		
+		this.o.offset();
+		this.callback.apply(this.o);
+	};
+	
+	/**
+	 * Main loop refresh
+	 */	
 	var loop = function(){
 		
 		animated.forEach(function(obj, i){
@@ -158,40 +212,31 @@
 				p2 = curve.pointAt(percent+0.01);
 			
 			var point = curve.pointAt(percent);
-			var angle = Math.atan2(p2.y-p1.y,p2.x-p1.x)*180/Math.PI;
 			
-			var css = {
-				translateX: point.x,
-				translateY: point.y,
-				rotate: obj.useAngle? angle: 0
-			};
+			var property = 'translateX('+point.x+'px) translateY('+point.y+'px)';
 			
-			var trans = new Transform(css);
-			
-			// add to previous transform
-			if(obj.hasTransform){
-				trans.add(obj.baseTransform.get(true));
+			if(obj.useAngle){
+				var angle = Math.atan2(p2.y-p1.y,p2.x-p1.x)*180/Math.PI;
+				obj.css.angle = angle;
+				property += ' rotate('+angle+'deg)';
+			}
+			else if(obj.hasTransform){
+				property += ' rotate('+obj.baseTransform.get('rotateZ')+'deg)';
 			}
 			
-			obj.o.css({
-				WebkitTransform: trans.getCssFormat()
-			});
+			obj.css.left = point.x;
+			obj.css.top = point.y;
+						
+			for(var i=0, css={}; i<cssPrefixes.length; i++)
+				css[cssPrefixes[i]+'transform'] = property;
+			
+			obj.o.css(css);
 			
 			obj.o.offset();
 			
 			// end
 			if(!obj.anim){
-				animated.splice(i, 1);
-				obj.o.removeData('animate-curb');
-				
-				// comment this /!\
-				obj.o.css({
-					WebkitTransform: obj.hasTransform? obj.baseTransform.getCssFormat(): '',
-					top: parseInt(obj.o.css('top')) + css.translateY,
-					left: parseInt(obj.o.css('left')) + css.translateX
-				});
-				obj.o.offset();
-				obj.callback.apply(obj.o);
+				obj.stop();
 			}
 		});
 		
@@ -224,6 +269,9 @@
 			loop();	
 	};
 	
+	/**
+	 * Pause
+	 */	
 	jQuery.fn.curvePause = function(){
 		var obj;
 		
@@ -232,8 +280,13 @@
 			if(obj)
 				obj.pause();
 		});
+		
+		return this;
 	};
 	
+	/**
+	 * Play
+	 */	
 	jQuery.fn.curvePlay = function(){
 		var obj;
 		
@@ -242,8 +295,13 @@
 			if(obj)
 				obj.play();
 		});
+		
+		return this;
 	};
 	
+	/**
+	 * Stop
+	 */	
 	jQuery.fn.curveStop = function(){
 		var obj;
 		
@@ -252,34 +310,50 @@
 			if(obj)
 				obj.stop();
 		});
+		
+		return this;
 	};
 	
-	jQuery.fn.animateCurve = function(curve, aTime, aCallback){
+	/**
+	 * Main function
+	 * @params {Array} aCurve
+	 * @params {Object} [aOption]
+	 * @params {Number} aTime
+	 * @params {Function} aCallback
+	 */	
+	jQuery.fn.animateCurve = function(aCurve, aOption, aTime, aCallback){
 		
 		var opt = {
-			curve: {
-				start: [0,0],
-				end: [100,0],
-				tanStart: [0,0],
-				tanEnd: [100,0],
-				angle: true
-			},
+			curve: [],
+			useAngle: true,
 			time: 1000,
+			cssTrans: true,
 			callback: function(){}
 		};
 		
-		opt.curve = $.extend(opt.curve, curve);
-		opt.time = aTime||opt.time;
-		opt.callback = aCallback||opt.callback;
+		opt.curve = aCurve||opt.curve;
+		if(typeof aOption === 'number'){
+			opt.time = aOption||opt.time;
+			opt.callback = aTime||opt.callback;
+		}
+		else{
+			opt.cssTrans = aOption.cssTrans!==undefined? aOption.cssTrans:opt.cssTrans;
+			opt.useAngle = aOption.useAngle!==undefined? aOption.useAngle:opt.useAngle;
+			opt.time = aTime||opt.time;
+			opt.callback = aCallback||opt.callback;
+		}
+		
+		opt.time /= 1000;
 		
 		var animate;
 		
 		this.each(function(){
-			animate = new animateCurve($(this), opt);
+			animate = new animateCurve($(this), animated.length, opt);
 			$(this).data('animate-curb', animate);
 			animated.push(animate);
 		});
 		
+		return this;
 	};
 	
 })(jQuery);
