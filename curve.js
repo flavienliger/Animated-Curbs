@@ -1,6 +1,7 @@
 (function(jQuery) {
 	
-	var animated = [],
+	var animated = {},
+		baseID = 1,
 		cssPrefixes = ['-webkit-', '-moz-', '-o-', ''],
 		delegateLoop = false;
 	
@@ -152,11 +153,13 @@
 	 */	
 	animateCurve.prototype.stop = function(){
 		this.anim = false;	
-		animated.splice(this.id, 1);
-		this.o.removeData('animate-curb');
+		delete animated[this.id];
+		this.o.removeData('curve-ID');
 		
 		if(this.cssTrans)
 			this.setTransform();
+		
+		this.callback.apply(this.o);
 	};
 	
 	/**
@@ -186,7 +189,6 @@
 		this.o.css(css);
 		
 		this.o.offset();
-		this.callback.apply(this.o);
 	};
 	
 	/**
@@ -194,9 +196,10 @@
 	 */	
 	var loop = function(){
 		
-		animated.forEach(function(obj, i){
+		for(var key in animated){
+			var obj = animated[key];
 			
-			if(!obj.anim) return false;
+			if(!obj.anim) continue;
 			
 			var now = Date.now();
 			var elapsed = (now-obj.startTime)/1000;
@@ -238,7 +241,7 @@
 			if(!obj.anim){
 				obj.stop();
 			}
-		});
+		}
 		
 		if(!delegateLoop){
 			requestAnimationFrame(loop);
@@ -273,12 +276,12 @@
 	 * Pause
 	 */	
 	jQuery.fn.curvePause = function(){
-		var obj;
+		var id;
 		
 		this.each(function(){
-			obj = $(this).data('animate-curb');
-			if(obj)
-				obj.pause();
+			id = $(this).data('curve-ID');
+			if(animated[id])
+				animated[id].pause();
 		});
 		
 		return this;
@@ -288,12 +291,12 @@
 	 * Play
 	 */	
 	jQuery.fn.curvePlay = function(){
-		var obj;
+		var id;
 		
 		this.each(function(){
-			obj = $(this).data('animate-curb');
-			if(obj)
-				obj.play();
+			id = $(this).data('curve-ID');
+			if(animated[id])
+				animated[id].play();
 		});
 		
 		return this;
@@ -303,12 +306,12 @@
 	 * Stop
 	 */	
 	jQuery.fn.curveStop = function(){
-		var obj;
+		var id;
 		
 		this.each(function(){
-			obj = $(this).data('animate-curb');
-			if(obj)
-				obj.stop();
+			id = $(this).data('curve-ID');
+			if(animated[id])
+				animated[id].stop();
 		});
 		
 		return this;
@@ -347,10 +350,15 @@
 		
 		var animate;
 		
-		this.each(function(){
-			animate = new animateCurve($(this), animated.length, opt);
-			$(this).data('animate-curb', animate);
-			animated.push(animate);
+		this.each(function(a, b){
+			
+			if(!$(this).data('curve-ID')){
+			
+				animate = new animateCurve($(this), baseID, opt);
+				$(this).data('curve-ID', baseID);
+				animated[baseID] = animate;
+				baseID ++;
+			}
 		});
 		
 		return this;
