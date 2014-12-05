@@ -1,5 +1,7 @@
 (function(jQuery) {
 	
+	'use strict';
+	
 	var animated = {},
 		baseID = 1,
 		cssPrefixes = ['-webkit-', '-moz-', '-o-', ''],
@@ -8,7 +10,7 @@
 	/**
 	 * Make svg curbs
 	 * @params {Array} curve - array of point [start][tang1][tang2][end][tang1][tang2][end]...
-	 */	
+	 */
 	var CurveAnimator = function(curve){
 				
 		this.path = document.createElementNS('http://www.w3.org/2000/svg','path');
