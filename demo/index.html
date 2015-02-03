@@ -1,0 +1,67 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="index.css">
+<meta charset="utf-8">
+</head>
+<body>
+	<div id="content">
+		<section>
+			<h2>Result</h2>
+			<div id="result" class="content">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 0px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 100px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 200px;">
+				<img id="img" src="icon.png" style="position: absolute; left: 200px;top: 300px;">
+			</div> 
+		</section>
+	</div>
+	
+	<p class="button">
+		<button onclick="pause();">Pause</button> / 
+		<button onclick="play();">Play</button> / 
+		<button onclick="stop();">Stop</button>
+	</p>
+	
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="../transform.js"></script>
+	<script src="../rAF.js"></script>
+	<script src="../curve.js"></script>
+
+	<script>
+		var pause = function(){
+			$('img').curvePause();
+		};
+
+		var play = function(){
+			$('img').curvePlay();
+		};
+
+		var stop = function(){
+			$('img').curveStop();
+		};
+
+
+		var anim1 = function(){
+			$('img').animateCurve([
+				[0,0], ['-=100', '+=100'], ['-=100','+=150'], [0, '+=200'], 
+						['+=100', '+=100'], ['+=100','+=150'], [0, '+=200'],
+						['-=100', '+=100'], ['-=100','+=150'], [0, '+=200']
+			], {useAngle: true, cssTrans: false}, 3000, function(){
+				anim2();
+			});
+		};
+
+		anim1();
+
+		var anim2 = function(){
+			$('img').animateCurve([
+				[0, 600], ['-=100', '-=100'], ['-=100','-=150'], [0, '-=200'], 
+						['+=100', '-=100'], ['+=100','-=150'], [0, '-=200'],
+						['-=100', '-=100'], ['-=100','-=150'], [0, '-=200']
+			], {useAngle: true, cssTrans: false}, 3000, function(){
+				anim1();
+			});
+		};
+	</script>
+</body>
+</html>
