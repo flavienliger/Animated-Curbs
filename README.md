@@ -48,5 +48,5 @@ Deps
 ========
 
 - jQuery
-- Transform - personal lib for css transform
+- __[Transform](https://github.com/flavienliger/Transform-Css)__ - personal lib for css transform
 - rAF - requestAnimFrame polyfill for old navigator
