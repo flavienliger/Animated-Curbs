@@ -6,19 +6,19 @@ Based of __[animate curves](http://phrogz.net/SVG/animation_on_a_curve.html)__.
 Animate object along a curve, for define a curve, we need start point, tangent first point, tangent second point, and the end point.
 
 - Simple used :
-```
+```js
 $(obj).animateCurve([start, tan1, tan2, end], options, time, callback);
 ```
 
 - Pause, Play, Stop worked :
-```
+```js
 $(obj).curvePause();
 $(obj).curvePlay();
 $(obj).curveStop();
 ```
 
 - Example :
-```
+```js
 $(obj).animateCurve([
     // first curve
     [0,0],               // start
@@ -38,7 +38,9 @@ $(obj).animateCurve([
     // set top/left at the end of curve
     cssTrans: false
 }, 
+// time
 3000, 
+// callback
 function(){
     next();
 });
